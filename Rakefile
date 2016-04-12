@@ -3,21 +3,28 @@ require 'puppet-lint/tasks/puppet-lint'
 
 Rake::Task[:lint].clear
 PuppetLint::RakeTask.new :lint do |config|
-  config.ignore_paths = ["spec/**/*.pp", "pkg/**/*.pp", "vendor/**/*.pp"]
-  config.disable_checks = ['80chars']
   config.fail_on_warnings = true
+  config.log_format = '%{path}:%{linenumber}:%{check}:%{KIND}:%{message}'
+  config.ignore_paths = [
+    'spec/**/*.pp',
+    'pkg/**/*.pp',
+    'vendor/**/*.pp',
+  ]
+  config.disable_checks = [
+    '80chars',
+    'autoloader_layout',
+  ]
 end
 
-PuppetSyntax.exclude_paths = ["spec/fixtures/**/*.pp", "vendor/**/*"]
-
-# Publishing tasks
-unless RUBY_VERSION =~ /^1\.8/
-  require 'puppet_blacksmith'
-  require 'puppet_blacksmith/rake_tasks'
-  require 'github_changelog_generator/task'
-  GitHubChangelogGenerator::RakeTask.new :changelog do |config|
-    m = Blacksmith::Modulefile.new
-    config.future_release = m.version
-    config.release_url = "https://forge.puppetlabs.com/#{m.author}/#{m.name}/%s"
+desc "Validate manifests, templates, and ruby files"
+task :validate do
+  Dir['manifests/**/*.pp'].each do |manifest|
+    sh "puppet parser validate --noop #{manifest}"
+  end
+  Dir['spec/**/*.rb','lib/**/*.rb'].each do |ruby_file|
+    sh "ruby -c #{ruby_file}" unless ruby_file =~ /spec\/fixtures/
+  end
+  Dir['templates/**/*.erb'].each do |template|
+    sh "erb -P -x -T '-' #{template} | ruby -c"
   end
 end
