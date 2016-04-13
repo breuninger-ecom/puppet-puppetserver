@@ -16,6 +16,8 @@ PuppetLint::RakeTask.new :lint do |config|
   ]
 end
 
+PuppetSyntax.exclude_paths = ["spec/fixtures/**/*.pp", "vendor/**/*"]
+
 desc "Validate manifests, templates, and ruby files"
 task :validate do
   Dir['manifests/**/*.pp'].each do |manifest|
