@@ -119,7 +119,7 @@ describe provider_class do
     let(:tmptarget) { aug_fixture("broken") }
     let(:target) { tmptarget.path }
 
-    skip "should fail to load" do
+    it "should fail to load" do
       txn = apply(Puppet::Type.type(:puppetserver_config).new(
         :name     => "foo",
         :value    => "yes",
